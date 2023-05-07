@@ -1,9 +1,8 @@
 import express, { Application } from 'express';
 import cors from 'cors';
 import morgan from 'morgan';
-import db from '../config/db';
-// import routesApi from '../routes/routes';
-import chalk from 'chalk';
+import { db } from '../config/db';
+import {routes} from '../routes/index.routes';
 
 export class Server {
     
@@ -16,7 +15,7 @@ export class Server {
         constructor() {
             this.app = express();
             this.middlewares();
-            // this.routes();
+            this.routes();
             this.dbConnection();
         }
 
@@ -29,9 +28,9 @@ export class Server {
             this.app.use( express.json() );
 
             // Morgan config
-            this.app.use(this.morganConfigMiddleware());
+           // this.app.use(this.morganConfigMiddleware());
         }
-  
+        /*
         morganConfigMiddleware() {
             return morgan((tokens: any, req: any, res: any)  => {
                 return [
@@ -47,16 +46,16 @@ export class Server {
                 ].join(' ');
             })
         }
-
-        /*routes() {
-           this.app.use( this.apiPath.routes,  routesApi );
-        }*/
+        */
+        routes() {
+           this.app.use( this.apiPath.routes,  routes );
+        }
 
         async dbConnection() {
             try {
                 let name = db.getDatabaseName();
                 await db.authenticate().then(() => {
-                    console.log(chalk.italic.magentaBright(`DATABASE CONNECTION SUCCESSFULL 💯 ${name}`));
+                    console.log(`DATABASE CONNECTION SUCCESSFULL 💯 ${name}`);
                 });
             } catch (error) {
                 console.error(error);
@@ -67,8 +66,8 @@ export class Server {
 
         listen() {
             this.app.listen( this.port, () => {
-                console.log(chalk.blueBright('VERSION ' + process.env.VERSION ))
-                console.log( chalk.blueBright(`SERVER EXPRESS ONLINE PORT: ${this.port}`));
+                console.log('VERSION ' + process.env.VERSION )
+                console.log(`SERVER EXPRESS ONLINE PORT: ${this.port}`);
             });
         }
 

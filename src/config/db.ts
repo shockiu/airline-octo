@@ -2,10 +2,13 @@
 import { Sequelize } from 'sequelize';
 require('dotenv').config();
 
-const DATABASE_URL = process.env.DATABASE_URL || '';
-const db = new Sequelize(DATABASE_URL,{
+const DATABASE = process.env.DATABASE || '';
+const DB_USER = process.env.DB_USER || '';
+const DB_PASSWORD = process.env.DB_PASSWORD || '';
+const DB_HOST = process.env.DB_HOST || '';
+
+export const db = new Sequelize(DATABASE, DB_USER, DB_PASSWORD,{
+    host: DB_HOST,
     dialect: 'mysql',
-    logging: false,
     port: 3306
 });
-export default db;
