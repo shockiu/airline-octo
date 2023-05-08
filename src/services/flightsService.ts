@@ -3,12 +3,13 @@ import { initModels } from '../models/init-models';
 
 const models = initModels(db);  
 
+
 export class FlightService {
 
     constructor(){}
 
     async findFlightsById(id: number | string) {
-        return await models.flight.findOne({
+        const flight = await models.flight.findOne({
             where: {flight_id: id},
             attributes: [
                 ['flight_id', 'flightId'], 
@@ -16,29 +17,35 @@ export class FlightService {
                 ['takeoff_airport', 'takeoffAirport'],
                 ['landing_date_time', 'landingDateTime'],
                 ['landing_airport', 'landingAirport'],
-                ['airplane_id', 'airplaneId']
-            ],
-            include:[
-                {
-                    model: models.boardingPass,
-                    as: 'boarding_passes',
-                    attributes: [
-                        ['passenger_id', 'passengerId'],
-                        ['boarding_pass_id', 'boardingPassId'],
-                        ['purchase_id', 'purchaseId'],
-                        ['seat_type_id', 'seatTypeId'],
-                        ['seat_id', 'seatId'],
-                        //[db.col('passenger.name'), 'name']
-                    ],
-                    include: [
-                        {
-                            model: models.passenger,
-                            as: 'passenger',
-                            //attributes: []
-                        }
-                    ]
-                }
+                ['airplane_id', 'airplaneId'],
             ]
         });
+        const passengers = await models.boardingPass.findAll({
+            where: {
+                flight_id: id
+            },
+            attributes: [
+                ['passenger_id', 'passengerId'],
+                'passenger.dni',
+                'passenger.name',
+                'passenger.age',
+                'passenger.country',
+                ['boarding_pass_id', 'boardingPassId'],
+                ['purchase_id', 'purchaseId'],
+                ['seat_type_id', 'seatTypeId'],
+                ['seat_id', 'seatId'],
+            ],
+            raw: true,
+            include: [
+                {
+                    model: models.passenger,
+                    as: 'passenger',
+                    attributes :[]
+                }
+            ]
+        })
+        const flightJson: any = flight?.toJSON();
+        flightJson.passengers = passengers;
+        return flightJson 
     }
 }
