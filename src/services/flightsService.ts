@@ -35,6 +35,7 @@ export class FlightService {
                 ['seat_type_id', 'seatTypeId'],
                 ['seat_id', 'seatId'],
             ],
+            group: 'purchase_id', 
             raw: true,
             include: [
                 {

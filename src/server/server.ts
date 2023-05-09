@@ -44,6 +44,7 @@ export class Server {
             } catch (error) {
                 console.error(error);
                 console.log('No pudo contentarse a la BD');
+                setTimeout(async ()=> await this.dbConnection(), 240000)
             }
         }
 
