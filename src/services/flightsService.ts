@@ -1,5 +1,6 @@
 import { db } from '../config/db';
 import { initModels } from '../models/init-models';
+import { PassengerBoardingPass, FlightPassengers, Seat } from '../interfaces/index';
 
 const models = initModels(db);  
 
@@ -21,7 +22,7 @@ export class FlightService {
             ]
         });
         if (!flight) throw { message: 'notFound', resposneDb: {} }
-
+        console.log(await this.findSeatOfAirplane(flight.airplane_id));
 
         const passengers = await models.boardingPass.findAll({
             where: {
@@ -37,8 +38,8 @@ export class FlightService {
                 ['purchase_id', 'purchaseId'],
                 ['seat_type_id', 'seatTypeId'],
                 ['seat_id', 'seatId'],
-            ],
-            group: 'purchase_id', 
+            ], 
+            order: [['purchase_id', 'ASC']],
             raw: true,
             include: [
                 {
@@ -48,8 +49,20 @@ export class FlightService {
                 }
             ]
         })
-        const flightJson: any = flight?.toJSON();
+        const flightJson: FlightPassengers = flight?.toJSON();
         flightJson.passengers = passengers;
         return flightJson 
+    }
+
+    async findSeatOfAirplane(airplane_id: number) {
+        return models.seat.findAll({
+            where: {
+                airplane_id
+            }
+        })
+    }
+
+    async assingSeatToPassenger(passenger: PassengerBoardingPass, seats: Seat[]){
+
     }
 }
