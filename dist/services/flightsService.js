@@ -28,6 +28,8 @@ class FlightService {
                     ['airplane_id', 'airplaneId'],
                 ]
             });
+            if (!flight)
+                throw { message: 'notFound', resposneDb: {} };
             const passengers = yield models.boardingPass.findAll({
                 where: {
                     flight_id: id
