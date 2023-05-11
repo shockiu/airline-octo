@@ -56,6 +56,7 @@ class FlightService {
                 ]
             });
             const flightJson = flight === null || flight === void 0 ? void 0 : flight.toJSON();
+            console.log(flight.airplane_id);
             const seats = yield this.findSeatOfAirplane(flightJson.airplane_id);
             flightJson.passengers = yield this.assingSeatToPassenger(passengers, seats);
             return flightJson;
