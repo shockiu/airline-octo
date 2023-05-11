@@ -82,16 +82,16 @@ class FlightService {
                         let possibleSeat = seats.find((seat) => seat.seat_type_id === element.seatTypeId);
                         if (!possibleSeat) {
                             let anotherSeat = seats.find((seat) => seat.seat_type_id !== element.seatTypeId);
-                            element.seatId = anotherSeat === null || anotherSeat === void 0 ? void 0 : anotherSeat.seatId;
+                            element.seatId = anotherSeat === null || anotherSeat === void 0 ? void 0 : anotherSeat.seat_id;
                             seats = seats.filter((seat) => seat.seat_id !== element.seatId);
                             return element;
                         }
-                        element.seatId = possibleSeat.seatId;
+                        element.seatId = possibleSeat.seat_id;
                         seats = seats.filter((seat) => seat.seat_id !== element.seatId);
                         return element;
                     }
                     let possibleSeat = seats.find((seat) => seat.seat_type_id === 3);
-                    element.seatId = possibleSeat === null || possibleSeat === void 0 ? void 0 : possibleSeat.seatId;
+                    element.seatId = possibleSeat === null || possibleSeat === void 0 ? void 0 : possibleSeat.seat_id;
                     seats = seats.filter((seat) => seat.seat_id !== element.seatId);
                     return element;
                 });
