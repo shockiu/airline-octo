@@ -49,6 +49,7 @@ export class FlightService {
             ]
         })
         const flightJson: FlightPassengers = flight?.toJSON();
+        console.log(flight.airplane_id)
         const seats = await this.findSeatOfAirplane(flightJson.airplane_id);
         flightJson.passengers =  await this.assingSeatToPassenger( passengers, seats);
         return flightJson 
