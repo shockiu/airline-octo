@@ -10,7 +10,7 @@ export class FlightService {
     constructor(){}
 
     async findFlightsById(id: number | string) {
-        const flight = await models.flight.findOne({
+        const flight: any = await models.flight.findOne({
             where: {flight_id: id},
             attributes: [
                 ['flight_id', 'flightId'], 
@@ -48,8 +48,9 @@ export class FlightService {
                 }
             ]
         })
-        const flightJson: FlightPassengers = flight?.toJSON();
-        flightJson.passengers =  passengers
+        const flightJson: any = flight?.toJSON();
+        const seats = await this.findSeatOfAirplane(flightJson.airplaneId);
+        flightJson.passengers =  await this.assingSeatToPassenger( passengers, seats);
         return flightJson 
     }
 
@@ -61,27 +62,27 @@ export class FlightService {
         })
     }
 
-    async assingSeatToPassenger(passengers: PassengerBoardingPass[] , seats: Seat[]){
+    async assingSeatToPassenger(passengers: any[] , seats: any[]){
         return await passengers.map((passenger) => {
-            let samePurchaseId = passengers.filter((pass) => pass.purchase_id === passenger.purchase_id);
-            passengers = passengers.filter((pass) => pass.purchase_id !== passenger.purchase_id);
+            let samePurchaseId = passengers.filter((pass) => pass.purchaseId === passenger.purchaseId);
+            passengers = passengers.filter((pass) => pass.purchaseId !== passenger.purchaseId);
             samePurchaseId = samePurchaseId.map((element) => {
-                if ( element.seat_id ) return element;
-                if ( [1,2].includes(element.seat_type_id) ) {
-                    let possibleSeat = seats.find((seat) => seat.seat_type_id === element.seat_type_id);
+                if ( element.seatId ) return element;
+                if ( [1,2].includes(element.seatTypeId) ) {
+                    let possibleSeat = seats.find((seat) => seat.seat_type_id === element.seatTypeId);
                     if ( !possibleSeat)  {
-                        let anotherSeat = seats.find((seat) => seat.seat_type_id !== element.seat_type_id);
-                        element.seat_id = anotherSeat?.seat_id;
-                        seats = seats.filter((seat) => seat.seat_id !== element.seat_id );
+                        let anotherSeat = seats.find((seat) => seat.seat_type_id !== element.seatTypeId);
+                        element.seatId = anotherSeat?.seatId;
+                        seats = seats.filter((seat) => seat.seat_id !== element.seatId );
                         return element;
                     }
-                    element.seat_id = possibleSeat.seat_id;
-                    seats = seats.filter((seat) => seat.seat_id !== element.seat_id );
+                    element.seatId = possibleSeat.seatId;
+                    seats = seats.filter((seat) => seat.seat_id !== element.seatId );
                     return element;
                 }
                 let possibleSeat = seats.find((seat) => seat.seat_type_id === 3);
-                element.seat_id = possibleSeat?.seat_id;
-                seats = seats.filter((seat) => seat.seat_id !== element.seat_id );
+                element.seatId = possibleSeat?.seatId;
+                seats = seats.filter((seat) => seat.seat_id !== element.seatId );
                 return element;
             })
             return samePurchaseId;
