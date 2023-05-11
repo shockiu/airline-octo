@@ -1,5 +1,6 @@
 import { db } from '../config/db';
-import { initModels } from '../models/init-models';
+import { boardingPass, initModels } from '../models/init-models';
+import { PassengerBoardingPass, FlightPassengers, Seat } from '../interfaces/index';
 
 const models = initModels(db);  
 
@@ -20,7 +21,10 @@ export class FlightService {
                 ['airplane_id', 'airplaneId'],
             ]
         });
-        const passengers = await models.boardingPass.findAll({
+        if (!flight) throw { message: 'notFound', resposneDb: {} }
+        console.log(await this.findSeatOfAirplane(flight.airplane_id));
+
+        const passengers: any[] = await models.boardingPass.findAll({
             where: {
                 flight_id: id
             },
@@ -34,8 +38,8 @@ export class FlightService {
                 ['purchase_id', 'purchaseId'],
                 ['seat_type_id', 'seatTypeId'],
                 ['seat_id', 'seatId'],
-            ],
-            group: 'purchase_id', 
+            ], 
+            order: [['purchase_id', 'ASC']],
             raw: true,
             include: [
                 {
@@ -45,8 +49,44 @@ export class FlightService {
                 }
             ]
         })
-        const flightJson: any = flight?.toJSON();
-        flightJson.passengers = passengers;
+        const flightJson: FlightPassengers = flight?.toJSON();
+        const seats = await this.findSeatOfAirplane(flightJson.airplane_id);
+        flightJson.passengers =  await this.assingSeatToPassenger( passengers, seats);
         return flightJson 
+    }
+
+    async findSeatOfAirplane(airplane_id: number) {
+        return models.seat.findAll({
+            where: {
+                airplane_id
+            }
+        })
+    }
+
+    async assingSeatToPassenger(passengers: PassengerBoardingPass[] , seats: Seat[]){
+        return await passengers.map((passenger) => {
+            let samePurchaseId = passengers.filter((pass) => pass.purchase_id === passenger.purchase_id);
+            passengers = passengers.filter((pass) => pass.purchase_id !== passenger.purchase_id);
+            samePurchaseId = samePurchaseId.map((element) => {
+                if ( element.seat_id ) return element;
+                if ( [1,2].includes(element.seat_type_id) ) {
+                    let possibleSeat = seats.find((seat) => seat.seat_type_id === element.seat_type_id);
+                    if ( !possibleSeat)  {
+                        let anotherSeat = seats.find((seat) => seat.seat_type_id !== element.seat_type_id);
+                        element.seat_id = anotherSeat?.seat_id;
+                        seats = seats.filter((seat) => seat.seat_id !== element.seat_id );
+                        return element;
+                    }
+                    element.seat_id = possibleSeat.seat_id;
+                    seats = seats.filter((seat) => seat.seat_id !== element.seat_id );
+                    return element;
+                }
+                let possibleSeat = seats.find((seat) => seat.seat_type_id === 3);
+                element.seat_id = possibleSeat?.seat_id;
+                seats = seats.filter((seat) => seat.seat_id !== element.seat_id );
+                return element;
+            })
+            return samePurchaseId;
+        }).flat();
     }
 }

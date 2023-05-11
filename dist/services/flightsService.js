@@ -28,6 +28,9 @@ class FlightService {
                     ['airplane_id', 'airplaneId'],
                 ]
             });
+            if (!flight)
+                throw { message: 'notFound', resposneDb: {} };
+            console.log(yield this.findSeatOfAirplane(flight.airplane_id));
             const passengers = yield models.boardingPass.findAll({
                 where: {
                     flight_id: id
@@ -43,7 +46,7 @@ class FlightService {
                     ['seat_type_id', 'seatTypeId'],
                     ['seat_id', 'seatId'],
                 ],
-                group: 'purchase_id',
+                order: [['purchase_id', 'ASC']],
                 raw: true,
                 include: [
                     {
@@ -54,8 +57,47 @@ class FlightService {
                 ]
             });
             const flightJson = flight === null || flight === void 0 ? void 0 : flight.toJSON();
-            flightJson.passengers = passengers;
+            const seats = yield this.findSeatOfAirplane(flightJson.airplane_id);
+            flightJson.passengers = yield this.assingSeatToPassenger(passengers, seats);
             return flightJson;
+        });
+    }
+    findSeatOfAirplane(airplane_id) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return models.seat.findAll({
+                where: {
+                    airplane_id
+                }
+            });
+        });
+    }
+    assingSeatToPassenger(passengers, seats) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return yield passengers.map((passenger) => {
+                let samePurchaseId = passengers.filter((pass) => pass.purchase_id === passenger.purchase_id);
+                passengers = passengers.filter((pass) => pass.purchase_id !== passenger.purchase_id);
+                samePurchaseId = samePurchaseId.map((element) => {
+                    if (element.seat_id)
+                        return element;
+                    if ([1, 2].includes(element.seat_type_id)) {
+                        let possibleSeat = seats.find((seat) => seat.seat_type_id === element.seat_type_id);
+                        if (!possibleSeat) {
+                            let anotherSeat = seats.find((seat) => seat.seat_type_id !== element.seat_type_id);
+                            element.seat_id = anotherSeat === null || anotherSeat === void 0 ? void 0 : anotherSeat.seat_id;
+                            seats = seats.filter((seat) => seat.seat_id !== element.seat_id);
+                            return element;
+                        }
+                        element.seat_id = possibleSeat.seat_id;
+                        seats = seats.filter((seat) => seat.seat_id !== element.seat_id);
+                        return element;
+                    }
+                    let possibleSeat = seats.find((seat) => seat.seat_type_id === 3);
+                    element.seat_id = possibleSeat === null || possibleSeat === void 0 ? void 0 : possibleSeat.seat_id;
+                    seats = seats.filter((seat) => seat.seat_id !== element.seat_id);
+                    return element;
+                });
+                return samePurchaseId;
+            }).flat();
         });
     }
 }
