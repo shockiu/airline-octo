@@ -34,6 +34,7 @@ exports.flightController.get(urls_1.URLS.flightsIdPassengers, (req, res) => __aw
         res.status(rest.code).send(rest);
     })
         .catch((err) => {
+        console.log(err);
         if (err.message && err.resposneDb) {
             const _a = (0, response_1.responseService)((0, response_1.STATUS)(err.message), err.resposneDb), { errors } = _a, rest = __rest(_a, ["errors"]);
             res.status(rest.code).send(rest);

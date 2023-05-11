@@ -13,6 +13,7 @@ flightController.get(URLS.flightsIdPassengers, async (req, res) => {
         res.status(rest.code).send(rest);
     })
     .catch((err) => {
+        console.log(err)
         if (err.message && err.resposneDb) {
             const { errors, ...rest } = responseService( STATUS(err.message), err.resposneDb)
             res.status(rest.code).send(rest);
