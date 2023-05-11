@@ -30,7 +30,6 @@ class FlightService {
             });
             if (!flight)
                 throw { message: 'notFound', resposneDb: {} };
-            console.log(yield this.findSeatOfAirplane(flight.airplane_id));
             const passengers = yield models.boardingPass.findAll({
                 where: {
                     flight_id: id
@@ -64,9 +63,9 @@ class FlightService {
     }
     findSeatOfAirplane(airplane_id) {
         return __awaiter(this, void 0, void 0, function* () {
-            return models.seat.findAll({
+            return yield models.seat.findAll({
                 where: {
-                    airplane_id
+                    airplane_id: airplane_id
                 }
             });
         });

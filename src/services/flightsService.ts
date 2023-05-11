@@ -22,8 +22,7 @@ export class FlightService {
             ]
         });
         if (!flight) throw { message: 'notFound', resposneDb: {} }
-        console.log(await this.findSeatOfAirplane(flight.airplane_id));
-
+        
         const passengers: any[] = await models.boardingPass.findAll({
             where: {
                 flight_id: id
@@ -56,9 +55,9 @@ export class FlightService {
     }
 
     async findSeatOfAirplane(airplane_id: number) {
-        return models.seat.findAll({
+        return await models.seat.findAll({
             where: {
-                airplane_id
+                airplane_id: airplane_id
             }
         })
     }
