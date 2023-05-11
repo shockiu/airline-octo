@@ -1,5 +1,5 @@
 import { db } from '../config/db';
-import { initModels } from '../models/init-models';
+import { boardingPass, initModels } from '../models/init-models';
 import { PassengerBoardingPass, FlightPassengers, Seat } from '../interfaces/index';
 
 const models = initModels(db);  
@@ -24,7 +24,7 @@ export class FlightService {
         if (!flight) throw { message: 'notFound', resposneDb: {} }
         console.log(await this.findSeatOfAirplane(flight.airplane_id));
 
-        const passengers = await models.boardingPass.findAll({
+        const passengers: any[] = await models.boardingPass.findAll({
             where: {
                 flight_id: id
             },
@@ -50,7 +50,8 @@ export class FlightService {
             ]
         })
         const flightJson: FlightPassengers = flight?.toJSON();
-        flightJson.passengers = passengers;
+        const seats = await this.findSeatOfAirplane(flightJson.airplane_id);
+        flightJson.passengers =  await this.assingSeatToPassenger( passengers, seats);
         return flightJson 
     }
 
@@ -62,7 +63,30 @@ export class FlightService {
         })
     }
 
-    async assingSeatToPassenger(passenger: PassengerBoardingPass, seats: Seat[]){
-
+    async assingSeatToPassenger(passengers: PassengerBoardingPass[] , seats: Seat[]){
+        return await passengers.map((passenger) => {
+            let samePurchaseId = passengers.filter((pass) => pass.purchase_id === passenger.purchase_id);
+            passengers = passengers.filter((pass) => pass.purchase_id !== passenger.purchase_id);
+            samePurchaseId = samePurchaseId.map((element) => {
+                if ( element.seat_id ) return element;
+                if ( [1,2].includes(element.seat_type_id) ) {
+                    let possibleSeat = seats.find((seat) => seat.seat_type_id === element.seat_type_id);
+                    if ( !possibleSeat)  {
+                        let anotherSeat = seats.find((seat) => seat.seat_type_id !== element.seat_type_id);
+                        element.seat_id = anotherSeat?.seat_id;
+                        seats = seats.filter((seat) => seat.seat_id !== element.seat_id );
+                        return element;
+                    }
+                    element.seat_id = possibleSeat.seat_id;
+                    seats = seats.filter((seat) => seat.seat_id !== element.seat_id );
+                    return element;
+                }
+                let possibleSeat = seats.find((seat) => seat.seat_type_id === 3);
+                element.seat_id = possibleSeat?.seat_id;
+                seats = seats.filter((seat) => seat.seat_id !== element.seat_id );
+                return element;
+            })
+            return samePurchaseId;
+        }).flat();
     }
 }
